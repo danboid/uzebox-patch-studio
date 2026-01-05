@@ -1,6 +1,6 @@
 CXXFLAGS=-Wall -Wextra -O2 `wx-config --cflags`
-CXXFLAGS+=`sdl2-config --cflags`
-LDLIBS=`wx-config --libs` `sdl2-config --libs`
+CXXFLAGS+=`sdl2-config --cflags` `pkg-config --cflags rtmidi`
+LDLIBS=-lasound -lpthread `wx-config --libs` `sdl2-config --libs` `pkg-config --libs rtmidi`
 OBJECTS=upsgrid.o filereader.o patchdata.o structdata.o
 
 ifneq (, $(findstring MINGW, $(shell uname)))

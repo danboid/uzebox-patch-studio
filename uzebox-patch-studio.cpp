@@ -1,3 +1,6 @@
+// Uzebox patch studio by Flavio Zavan
+// RtMidi support added by Dan MacDonald
+
 #include <wx/wxprec.h>
 #ifndef WX_PRECOMP
   #include <wx/wx.h>
@@ -22,6 +25,7 @@
 #include "patchdata.h"
 #include "structdata.h"
 #include "icons.h"
+#include "RtMidi.h"
 
 #define MIN_CLIENT_HEIGHT 400
 #define VERSION_STRING "0.0.2"
@@ -142,6 +146,42 @@ enum {
   ID_IMPORT,
 };
 
+RtMidiIn *midiIn = nullptr;
+UPSFrame *g_mainFrame = nullptr;
+int g_lastMidiNote = 60;
+int g_currentMidiNote = 80;
+
+void MidiCallback(double deltatime, std::vector<unsigned char> *message, void *userData) {
+    (void)deltatime; (void)userData;
+    if (message->size() < 3 || !g_mainFrame) return;
+
+    unsigned char status = message->at(0) & 0xF0;
+    unsigned char velocity = message->at(2);
+
+    if (status == 0x90 && velocity > 0) {
+    g_currentMidiNote = message->at(1); // Get note from MIDI message
+    wxCommandEvent event(wxEVT_MENU, ID_PLAY);
+    g_mainFrame->GetEventHandler()->AddPendingEvent(event);
+    }
+    else if (status == 0x80 || (status == 0x90 && velocity == 0)) {
+        // Send Stop command to UI thread
+        wxCommandEvent event(wxEVT_MENU, ID_STOP);
+        g_mainFrame->GetEventHandler()->AddPendingEvent(event);
+    }
+}
+
+void InitMidi() {
+    try {
+        midiIn = new RtMidiIn();
+        if (midiIn->getPortCount() > 0) {
+            midiIn->openPort(0);
+            midiIn->setCallback(&MidiCallback);
+        }
+    } catch (RtMidiError &error) {
+        error.printMessage();
+    }
+}
+
 wxBEGIN_EVENT_TABLE(UPSFrame, wxFrame)
   EVT_MENU(wxID_NEW, UPSFrame::on_new)
   EVT_MENU(wxID_EXIT, UPSFrame::on_exit)
@@ -188,6 +228,8 @@ bool UPSApp::OnInit() {
     return false;
   }
 
+  InitMidi();
+
   if (argc > 1) {
     frame->open_file(argv[1]);
   }
@@ -196,6 +238,7 @@ bool UPSApp::OnInit() {
 }
 
 int UPSApp::OnExit() {
+  if (midiIn) delete midiIn;
   Mix_CloseAudio();
   SDL_Quit();
 
@@ -275,6 +318,7 @@ UPSFrame::UPSFrame(const wxString &title, const wxPoint &pos,
     const wxSize &size) :
   wxFrame(NULL, wxID_ANY, title, pos, size),
   valid_var_name("^[a-zA-Z\\_][a-zA-Z\\_0-9]*$") {
+  g_mainFrame = this;
   wxMenu *menuFile = new wxMenu;
   menuFile->Append(wxID_NEW);
   menuFile->Append(wxID_OPEN);
@@ -1008,9 +1052,9 @@ void UPSFrame::on_play(wxCommandEvent &event) {
     update_patch_data(item);
 
     auto data = (PatchData *) data_tree->GetItemData(item);
-    if (data->play()) {
-      SetStatusText(wxString::Format(_("Playing %s"),
-            data_tree->GetItemText(item)));
+    if (data->play(g_currentMidiNote)) { // Use the global MIDI note
+    SetStatusText(wxString::Format(_("Playing %s (Note %d)"),
+        data_tree->GetItemText(item), g_currentMidiNote));
     }
     else {
       SetStatusText(data->last_error);

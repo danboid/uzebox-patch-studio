@@ -26,11 +26,11 @@ void PatchData::stop() {
   }
 }
 
-bool PatchData::play(bool loop) {
+bool PatchData::play(int midi_note, bool loop) {
   stop();
   free_chunk();
 
-  if (generate_wave(wave_data)
+  if (generate_wave(wave_data, midi_note)
       && (wave = Mix_QuickLoad_WAV(&(wave_data[0])))) {
     if (loop) {
       channel = Mix_PlayChannel(-1, wave, -1);
@@ -129,8 +129,8 @@ void PatchData::add_headers(wxVector<uint8_t> &out_data) {
     out_data.push_back(0);
 }
 
-bool PatchData::generate_wave(wxVector<uint8_t> &out_data) {
-  int8_t note = 80;
+bool PatchData::generate_wave(wxVector<uint8_t> &out_data, int midi_note) {
+  int8_t note = (int8_t)midi_note; // Use the passed note instead of 80
   uint16_t next_sample = 0;
   uint8_t note_volume = DEFAULT_VOLUME;
   uint8_t envelope_volume = 0xff;

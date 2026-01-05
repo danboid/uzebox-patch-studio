@@ -3,6 +3,8 @@ Uzebox Patch Studio
 
 A cross-platform graphical editor for Uzebox sound patches.
 
+Featuring MIDI input support via librtmidi.
+
 ----------
 
 Compiling on Linux
@@ -10,7 +12,7 @@ Compiling on Linux
 
 1. Install wxWidgets, SDL2 and SDL2_mixer
 **Arch Linux:** pacman -S wxgtk sdl2 sdl2_mixer
-**Ubuntu:** apt-get install libwxgtk3.0-dev libsdl2-dev libsdl2-mixer-dev
+**Ubuntu:** apt-get install libwxgtk3.0-dev libsdl2-dev libsdl2-mixer-dev librtmidi-dev
 2. cd to Uzebox Patch Studio's directory
 3. make
 

@@ -33,9 +33,9 @@ class PatchData : public wxTreeItemData {
     PatchData(const PatchData *p);
     ~PatchData();
     void stop();
-    bool play(bool loop=false);
+    bool play(int midi_note = 80, bool loop = false);
     void retrigger();
-    bool generate_wave(wxVector<uint8_t> &out_data);
+    bool generate_wave(wxVector<uint8_t> &out_data, int midi_note = 80);
     wxString last_error;
 
   private:
