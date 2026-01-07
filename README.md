@@ -3,7 +3,9 @@ Uzebox Patch Studio
 
 A cross-platform graphical editor for Uzebox sound patches.
 
-Featuring MIDI input support via librtmidi.
+Featuring MIDI input support via librtmidi, enabling easy preview of Uzebox patches at different pitches and using UPS as a MIDI synth.
+
+To connect VMPK (Virtual MIDI piano keyboard) to UPS go to **Edit -> MIDI connections** in VMPK, set the **MIDI OUT driver** to **ALSA** and then choose **RtMidi Input Client** as the **Output MIDI connection** then click **OK**.
 
 ----------
 
